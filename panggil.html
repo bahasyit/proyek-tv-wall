@@ -21,7 +21,6 @@
     </style>
 </head>
 <body>
-
     <div class="container">
         <h1>Kontrol Antrian Sekolah (ONLINE)</h1>
         <hr>
@@ -31,10 +30,8 @@
             <option value="B">B (Konsultasi)</option>
             <option value="C">C (Pembayaran)</option>
         </select>
-        
         <label for="jenisLayanan">Teks Layanan:</label>
         <input type="text" id="jenisLayanan" value="(Admisi)">
-        
         <button onclick="gantiLayanan()" class="btn-ganti">Ganti Layanan Saat Ini</button>
         <hr>
         <button onclick="panggilBerikutnya()" class="btn-panggil">Panggil Berikutnya (+1)</button>
@@ -43,8 +40,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
-    <script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script> <script>
         // --- Bagian 1: KONFIGURASI FIREBASE ---
         const firebaseConfig = {
           apiKey: "AIzaSyDnl0AJU10tBXze8u4nDdZoaAUFo8ypFiQ",
@@ -58,34 +54,38 @@
         
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        const refAntrian = database.ref('antrian'); // Menunjuk ke 'antrian'
+        const auth = firebase.auth(); // <-- BARU
+        const refAntrian = database.ref('antrian');
 
-        // --- Bagian 2: Variabel & Data Awal ---
-        let dataAntrian = {
-            kode: 'A',
-            nomor: 1,
-            jenis: '(Admisi)'
-        };
+        // (Variabel dataAntrian tidak berubah)
+        let dataAntrian = { kode: 'A', nomor: 1, jenis: '(Admisi)' };
+        
+        // --- (BARU) Bagian 2: Login Anonim ---
+        auth.signInAnonymously()
+            .then(() => {
+                // Sukses login, panggil fungsi untuk memuat data
+                loadInitialData();
+            })
+            .catch((error) => {
+                console.error("Gagal login anonim:", error);
+            });
 
-        refAntrian.once('value', (snapshot) => {
-            if (snapshot.exists()) {
-                dataAntrian = snapshot.val();
-            } else {
-                refAntrian.set(dataAntrian);
-            }
-            document.getElementById('kodeLayanan').value = dataAntrian.kode;
-            document.getElementById('jenisLayanan').value = dataAntrian.jenis;
-        });
-
-        // --- Bagian 3: FUNGSI TOMBOL (Menulis ke Firebase) ---
-        function panggilBerikutnya() {
-            dataAntrian.nomor++;
-            refAntrian.set(dataAntrian);
+        // --- Bagian 3: Muat Data (Sekarang jadi fungsi) ---
+        function loadInitialData() {
+            refAntrian.once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    dataAntrian = snapshot.val();
+                } else {
+                    refAntrian.set(dataAntrian);
+                }
+                document.getElementById('kodeLayanan').value = dataAntrian.kode;
+                document.getElementById('jenisLayanan').value = dataAntrian.jenis;
+            });
         }
-        function resetAntrian() {
-            dataAntrian.nomor = 1;
-            refAntrian.set(dataAntrian);
-        }
+
+        // --- Bagian 4: Fungsi Tombol (Tidak berubah) ---
+        function panggilBerikutnya() { dataAntrian.nomor++; refAntrian.set(dataAntrian); }
+        function resetAntrian() { dataAntrian.nomor = 1; refAntrian.set(dataAntrian); }
         function gantiLayanan() {
             dataAntrian.kode = document.getElementById('kodeLayanan').value;
             dataAntrian.jenis = document.getElementById('jenisLayanan').value;
