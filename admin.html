@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin CMS - Display Lobi</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; display: flex; justify-content: center; align-items: center; min-height: 90vh; }
+        .container { width: 100%; max-width: 600px; background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { margin-top: 0; color: #333; text-align: center; }
+        hr { border: 0; border-top: 1px solid #eee; margin: 20px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], select { box-sizing: border-box; width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
+        button { display: block; width: 100%; padding: 15px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; background-color: #007bff; color: white; }
+        button:hover { background-color: #0069d9; }
+        #status { text-align: center; margin-top: 15px; font-weight: bold; color: green; }
+        
+        /* Style untuk Slider Volume */
+        .volume-slider { display: flex; align-items: center; gap: 10px; }
+        input[type="range"] { flex: 1; }
+        #volume-label { font-size: 16px; font-weight: bold; min-width: 45px; text-align: right; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Admin Konten Display Lobi</h1>
+        <hr>
+        <fieldset>
+            <legend><h3>Pengaturan Media</h3></legend>
+            
+            <label for="media-tipe">Tipe Media:</label>
+            <select id="media-tipe">
+                <option value="youtube">YouTube (Playlist)</option>
+                <option value="m3u8">M3U8 (Live Stream)</option>
+            </select>
+
+            <label for="media-sumber">Sumber Media (ID Playlist atau URL M3U8):</label>
+            <input type="text" id="media-sumber" placeholder="Contoh: PLLZ0qJ... atau https://...m3u8">
+            
+            <label for="media-audio">Volume Video:</label>
+            <div class="volume-slider">
+                <input type="range" id="media-audio" min="0" max="100" value="0">
+                <span id="volume-label">0%</span>
+            </div>
+            </fieldset>
+        
+        <br>
+        <fieldset>
+            <legend><h3>Pengaturan Teks Berjalan</h3></legend>
+            <input type="text" id="marquee-teks" placeholder="Teks yang akan berjalan di footer...">
+        </fieldset>
+        <br>
+        
+        <button onclick="saveConfig()">Simpan Perubahan</button>
+        <div id="status"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <script>
+        // --- Bagian 1: KONFIGURASI FIREBASE ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyDnl0AJU10tBXze8u4nDdZoaAUFo8ypFiQ",
+          authDomain: "project-tv-wall.firebaseapp.com",
+          databaseURL: "https://project-tv-wall-default-rtdb.asia-southeast1.firebasedatabase.app",
+          projectId: "project-tv-wall",
+          storageBucket: "project-tv-wall.firebasestorage.app",
+          messagingSenderId: "562728437251",
+          appId: "1:562728437251:web:85e9f229b6e4d02b4f7036"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const refConfig = database.ref('config');
+        
+        // --- Bagian 2: Elemen Form (Update) ---
+        const elMediaType = document.getElementById('media-tipe');
+        const elMediaSumber = document.getElementById('media-sumber');
+        const elMediaAudio = document.getElementById('media-audio'); // <-- Ini sekarang Slider
+        const elVolumeLabel = document.getElementById('volume-label'); // <-- Label %
+        const elMarqueeTeks = document.getElementById('marquee-teks');
+        const elStatus = document.getElementById('status');
+
+        // (BARU) Update label % saat slider digeser
+        elMediaAudio.oninput = () => {
+            elVolumeLabel.innerText = `${elMediaAudio.value}%`;
+        }
+
+        // --- Bagian 3: Muat Data Saat Ini (Update) ---
+        refConfig.once('value', (snapshot) => {
+            if (snapshot.exists()) {
+                const config = snapshot.val();
+                if (config.media) {
+                    elMediaType.value = config.media.tipe;
+                    elMediaSumber.value = config.media.sumber;
+                    
+                    // (BARU) Atur posisi slider dan label
+                    const audioLevel = config.media.audio || 0; // Default 0
+                    elMediaAudio.value = audioLevel;
+                    elVolumeLabel.innerText = `${audioLevel}%`;
+                }
+                if (config.marquee) {
+                    elMarqueeTeks.value = config.marquee.teks;
+                }
+            } else {
+                // (Isi data awal jika config kosong)
+                elMediaAudio.value = 0;
+                elVolumeLabel.innerText = `0%`;
+                // ... (data awal lainnya) ...
+            }
+        });
+
+        // --- Bagian 4: Fungsi Simpan Perubahan (Update) ---
+        function saveConfig() {
+            // 1. Ambil nilai baru
+            const newTipe = elMediaType.value;
+            const newSumber = elMediaSumber.value;
+            const newAudio = parseInt(elMediaAudio.value, 10); // <-- BARU (ambil angka)
+            const newMarquee = elMarqueeTeks.value;
+
+            // 2. Buat objek 'config' baru
+            const newConfig = {
+                media: {
+                    tipe: newTipe,
+                    sumber: newSumber,
+                    audio: newAudio // <-- BARU (simpan angka)
+                },
+                marquee: {
+                    teks: newMarquee
+                }
+            };
+
+            // 3. Simpan (Set) data baru ini ke Firebase
+            refConfig.set(newConfig)
+                .then(() => {
+                    elStatus.innerText = "Sukses tersimpan! Volume diatur ke " + newAudio + "%.";
+                    setTimeout(() => { elStatus.innerText = ""; }, 3000);
+                });
+        }
+    </script>
+</body>
+</html>
