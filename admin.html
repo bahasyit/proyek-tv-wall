@@ -52,6 +52,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script> <script>
         // --- Bagian 1: KONFIGURASI FIREBASE ---
+        // (Ini adalah kode yang baru saja Anda paste)
         const firebaseConfig = {
           apiKey: "AIzaSyDnl0AJU10tBXze8u4nDdZoaAUFo8ypFiQ",
           authDomain: "project-tv-wall.firebaseapp.com",
@@ -59,7 +60,8 @@
           projectId: "project-tv-wall",
           storageBucket: "project-tv-wall.firebasestorage.app",
           messagingSenderId: "562728437251",
-          appId: "1:562728437251:web:85e9f229b6e4d02b4f7036"
+          appId: "1:562728437251:web:85e9f229b6e4d02b4f7036",
+          measurementId: "G-EX7QEDQBDT"
         };
         
         firebase.initializeApp(firebaseConfig);
@@ -74,18 +76,21 @@
         const elVolumeLabel = document.getElementById('volume-label');
         const elMarqueeTeks = document.getElementById('marquee-teks');
         const elStatus = document.getElementById('status');
-        
-        // --- (BARU) Bagian 2: Login Anonim ---
-        auth.signInAnonymously()
-            .then(() => {
-                // Sukses login, panggil fungsi untuk memuat data
+
+        // --- (BARU) Bagian 2: "Skrip Penjaga" ---
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // Pengguna SUDAH LOGIN. Izinkan dia masuk.
+                console.log('Penjaga: Akses diizinkan untuk', user.uid);
+                // Panggil fungsi untuk memuat data
                 loadInitialData();
-            })
-            .catch((error) => {
-                console.error("Gagal login anonim:", error);
-                elStatus.innerText = "Error: Gagal terhubung ke server keamanan.";
-                elStatus.style.color = "red";
-            });
+            } else {
+                // Pengguna TIDAK LOGIN.
+                console.log('Penjaga: Akses ditolak. Mengalihkan ke login...');
+                // Tendang dia ke halaman login
+                window.location.href = 'login.html';
+            }
+        });
 
         // --- Bagian 3: Muat Data (Sekarang jadi fungsi) ---
         function loadInitialData() {
@@ -103,10 +108,8 @@
                         elMarqueeTeks.value = config.marquee.teks;
                     }
                 } else {
-                    // (Isi data awal jika config kosong)
                     elMediaAudio.value = 0;
                     elVolumeLabel.innerText = `0%`;
-                    // ... (data awal lainnya) ...
                 }
             });
         }
