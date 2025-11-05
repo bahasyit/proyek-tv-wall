@@ -64,13 +64,9 @@ body, html {
 .swiper-slide {
     width: 100%;
     height: 100%;
-    
-    /* Style untuk gambar di dalam slide */
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    
-    /* (Opsional) Tampilkan teks jika gambar gagal dimuat */
     display: flex;
     justify-content: center;
     align-items: center;
