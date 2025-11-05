@@ -1,0 +1,184 @@
+/* ========================================
+   FILE STYLE_IKLAN.CSS (BARU)
+   Desain 3-Kolom Anda
+   ======================================== */
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: Arial, sans-serif;
+    color: white;
+    overflow: hidden;
+    background-color: #000; /* Latar hitam jika background gagal dimuat */
+    background-image: url('background.jpg');
+    background-size: cover;
+    background-position: center;
+}
+
+/* Menggunakan CSS GRID untuk layout 3-kolom */
+.grid-container {
+    display: grid;
+    height: 100vh;
+    padding: 15px;
+    box-sizing: border-box;
+    gap: 15px;
+    
+    /* Kolom: Kiri 250px, Tengah (mengisi sisa), Kanan 250px */
+    grid-template-columns: 250px 1fr 250px;
+    
+    /* Baris: Atas (auto), Tengah (mengisi sisa), Bawah (auto) */
+    grid-template-rows: auto 1fr auto;
+
+    /* "Peta" dari layout Anda */
+    grid-template-areas:
+        "jam     cuaca   cuaca"
+        "iklan-kiri video iklan-kanan"
+        "footer  footer  footer";
+}
+
+/* ========================================
+   EFEK "GLASSMORPHISM"
+   Diterapkan ke semua kotak
+   ======================================== */
+.grid-item {
+    padding: 20px;
+    border-radius: 10px;
+    background-color: rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* ========================================
+   PENEMPATAN KOTAK
+   ======================================== */
+
+.jam {
+    grid-area: jam;
+    text-align: center;
+    font-weight: bold;
+}
+.cuaca {
+    grid-area: cuaca;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* Posisikan di kanan */
+    gap: 15px;
+}
+.iklan-kiri {
+    grid-area: iklan-kiri;
+    padding-top: 50px; /* Beri ruang untuk Antrian Mini */
+}
+.video {
+    grid-area: video;
+    padding: 0; /* Player harus menempel */
+    overflow: hidden;
+    position: relative; /* Wajib untuk perisai video */
+}
+.iklan-kanan {
+    grid-area: iklan-kanan;
+}
+.footer {
+    grid-area: footer;
+    /* (CSS Marquee yang sama persis seperti style_antrian.css) */
+    overflow: hidden;
+    white-space: nowrap;
+    padding: 10px 0; 
+    font-size: 2.2vw;  
+    font-weight: bold;   
+}
+
+/* ========================================
+   STYLING KONTEN DI DALAM KOTAK
+   ======================================== */
+
+/* Jam & Antrian Mini di Kiri Atas */
+#jam-digital {
+    font-size: 3.5vw;
+}
+#antrian-mini {
+    font-size: 3vw;
+    margin-top: 15px;
+    color: #f0f0f0;
+    text-shadow: 1px 1px 3px #000;
+}
+
+/* Cuaca di Kanan Atas */
+.cuaca-suhu-grup {
+    font-size: 3.5vw;
+    font-weight: bold;
+}
+.cuaca-ikon img {
+    width: 5vw;
+}
+
+/* Iklan Vertikal (Kiri & Kanan) */
+.iklan-kiri, .iklan-kanan {
+    text-align: center;
+    font-size: 2vw;
+    writing-mode: vertical-rl; /* Teks Vertikal */
+    transform: rotate(180deg); /* Balikkan agar terbaca dari bawah ke atas */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Player Media (Sama seperti style_antrian.css) */
+#youtube-player,
+#hls-player {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    border: none;
+    background-color: #000;
+}
+#media-shield {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    background: transparent;
+}
+.hidden {
+    display: none !important;
+}
+
+/* Marquee Footer (Sama seperti style_antrian.css) */
+.marquee-wrapper {
+    display: flex;
+    white-space: nowrap;
+    animation: marquee 20s linear infinite; 
+}
+.marquee-wrapper > span {
+    padding-right: 50px;
+}
+@keyframes marquee {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+/* Tombol Start Overlay (Sama seperti style_antrian.css) */
+#start-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+#start-button {
+    padding: 25px 50px;
+    font-size: 2vw;
+    /* (style tombol lainnya) */
+}

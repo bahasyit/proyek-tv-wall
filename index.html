@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Display Lobi Utama</title>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; }
+        /* Kontainer 'view' akan mengisi seluruh layar */
+        #view-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        /* 'view' yang dimuat akan mengisi penuh kontainer */
+        /* Kita akan menggunakan 'iframe' untuk memuat 'view' */
+        #view-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="view-container">
+        <iframe id="view-frame" src="about:blank"></iframe>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <script>
+        // --- 1. Konfigurasi Firebase ---
+        // (Gunakan config yang sama persis)
+        const firebaseConfig = {
+          apiKey: "AIzaSyDnl0AJU10tBXze8u4nDdZoaAUFo8ypFiQ",
+          authDomain: "project-tv-wall.firebaseapp.com",
+          databaseURL: "https://project-tv-wall-default-rtdb.asia-southeast1.firebasedatabase.app",
+          projectId: "project-tv-wall",
+          storageBucket: "project-tv-wall.firebasestorage.app",
+          messagingSenderId: "562728437251",
+          appId: "1:562728437251:web:85e9f229b6e4d02b4f7036",
+          measurementId: "G-EX7QEDQBDT"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const refConfig = database.ref('config');
+
+        // --- 2. Elemen "Cangkang" ---
+        const elViewFrame = document.getElementById('view-frame');
+        let tampilanAktifSekarang = ""; // Untuk melacak
+
+        // --- 3. Pendengar (Listener) Utama ---
+        refConfig.child('tampilan_aktif').on('value', (snapshot) => {
+            const tampilanBaru = snapshot.val();
+            
+            if (!tampilanBaru || tampilanBaru === tampilanAktifSekarang) {
+                // Tidak ada data, atau tidak ada perubahan. Diam saja.
+                return;
+            }
+
+            console.log('Perintah diterima: Ganti tampilan ke ->', tampilanBaru);
+            tampilanAktifSekarang = tampilanBaru;
+            
+            // Tentukan file HTML mana yang harus dimuat
+            let urlTampilanBaru = '';
+            
+            if (tampilanBaru === 'antrian') {
+                urlTampilanBaru = 'view_antrian.html';
+            } else if (tampilanBaru === 'iklan') {
+                urlTampilanBaru = 'view_iklan.html';
+            } else if (tampilanBaru === 'jadwal') {
+                urlTampilanBaru = 'view_jadwal.html';
+            } else {
+                // Fallback jika setting salah
+                urlTampilanBaru = 'view_antrian.html'; 
+            }
+
+            // Ganti sumber 'iframe' untuk memuat tampilan baru
+            elViewFrame.src = urlTampilanBaru;
+        });
+
+        // --- 4. Cek Tampilan Awal (Saat Halaman Dimuat) ---
+        // (Ini untuk memastikan TV tahu harus memuat apa saat pertama kali dinyalakan)
+        refConfig.child('tampilan_aktif').once('value', (snapshot) => {
+            let tampilanAwal = 'view_antrian.html'; // Default jika data belum ada
+            
+            if (snapshot.exists()) {
+                const namaTampilan = snapshot.val();
+                if (namaTampilan === 'iklan') {
+                    tampilanAwal = 'view_iklan.html';
+                } else if (namaTampilan === 'jadwal') {
+                    tampilanAwal = 'view_jadwal.html';
+                }
+            } else {
+                // Jika data 'tampilan_aktif' belum ada di Firebase
+                // Set 'antrian' sebagai default
+                refConfig.child('tampilan_aktif').set('antrian');
+            }
+            
+            tampilanAktifSekarang = tampilanAwal.split('.')[0];
+            elViewFrame.src = tampilanAwal;
+        });
+
+    </script>
+</body>
+</html>

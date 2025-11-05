@@ -4,137 +4,122 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin CMS - Display Lobi</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; display: flex; justify-content: center; align-items: center; min-height: 90vh; }
-        .container { width: 100%; max-width: 600px; background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { margin-top: 0; color: #333; text-align: center; }
-        hr { border: 0; border-top: 1px solid #eee; margin: 20px 0; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"], select { box-sizing: border-box; width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
-        button { display: block; width: 100%; padding: 15px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; background-color: #007bff; color: white; }
-        button:hover { background-color: #0069d9; }
-        #status { text-align: center; margin-top: 15px; font-weight: bold; color: green; }
-        .volume-slider { display: flex; align-items: center; gap: 10px; }
-        input[type="range"] { flex: 1; }
-        #volume-label { font-size: 16px; font-weight: bold; min-width: 45px; text-align: right; }
-    </style>
+    <style> ... (CSS Anda yang lama) ... </style>
 </head>
 <body>
+
     <div class="container">
         <h1>Admin Konten Display Lobi</h1>
+        
         <hr>
         <fieldset>
-            <legend><h3>Pengaturan Media</h3></legend>
-            <label for="media-tipe">Tipe Media:</label>
-            <select id="media-tipe">
-                <option value="youtube">YouTube (Playlist)</option>
-                <option value="m3u8">M3U8 (Live Stream)</option>
+            <legend><h3>Pengaturan Tampilan Utama</h3></legend>
+            <label for="tampilan-aktif">Pilih Tampilan TV Lobi:</label>
+            <select id="tampilan-aktif">
+                <option value="antrian">Tampilan Antrian (4-Kotak)</option>
+                <option value="iklan">Tampilan Iklan (3-Kolom)</option>
+                <option value="jadwal">Tampilan Jadwal (Segera Hadir)</option>
             </select>
-            <label for="media-sumber">Sumber Media:</label>
-            <input type="text" id="media-sumber" placeholder="Contoh: PLLZ0qJ... atau https://...m3u8">
-            <label for="media-audio">Volume Video:</label>
-            <div class="volume-slider">
-                <input type="range" id="media-audio" min="0" max="100" value="0">
-                <span id="volume-label">0%</span>
-            </div>
         </fieldset>
+        <br>
+        <fieldset>
+            <legend><h3>Pengaturan Media (Video)</h3></legend>
+            ...
+        </fieldset>
+        
         <br>
         <fieldset>
             <legend><h3>Pengaturan Teks Berjalan</h3></legend>
-            <input type="text" id="marquee-teks" placeholder="Teks yang akan berjalan di footer...">
+            ...
         </fieldset>
         <br>
+        
         <button onclick="saveConfig()">Simpan Perubahan</button>
         <div id="status"></div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script> <script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
+    <script>
         // --- Bagian 1: KONFIGURASI FIREBASE ---
-        // (Ini adalah kode yang baru saja Anda paste)
-        const firebaseConfig = {
-          apiKey: "AIzaSyDnl0AJU10tBXze8u4nDdZoaAUFo8ypFiQ",
-          authDomain: "project-tv-wall.firebaseapp.com",
-          databaseURL: "https://project-tv-wall-default-rtdb.asia-southeast1.firebasedatabase.app",
-          projectId: "project-tv-wall",
-          storageBucket: "project-tv-wall.firebasestorage.app",
-          messagingSenderId: "562728437251",
-          appId: "1:562728437251:web:85e9f229b6e4d02b4f7036",
-          measurementId: "G-EX7QEDQBDT"
-        };
-        
+        const firebaseConfig = { /* ... (Config Anda) ... */ };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        const auth = firebase.auth(); // <-- BARU
+        const auth = firebase.auth();
         const refConfig = database.ref('config');
         
-        // (Elemen Form tidak berubah)
+        // --- Bagian 2: Elemen Form (Update) ---
+        const elTampilanAktif = document.getElementById('tampilan-aktif'); // <-- BARU
         const elMediaType = document.getElementById('media-tipe');
         const elMediaSumber = document.getElementById('media-sumber');
         const elMediaAudio = document.getElementById('media-audio');
         const elVolumeLabel = document.getElementById('volume-label');
         const elMarqueeTeks = document.getElementById('marquee-teks');
         const elStatus = document.getElementById('status');
-
-        // --- (BARU) Bagian 2: "Skrip Penjaga" ---
+        
+        // --- (BARU) Bagian 2.5: "Skrip Penjaga" Login ---
         auth.onAuthStateChanged((user) => {
             if (user) {
-                // Pengguna SUDAH LOGIN. Izinkan dia masuk.
-                console.log('Penjaga: Akses diizinkan untuk', user.uid);
-                // Panggil fungsi untuk memuat data
-                loadInitialData();
+                loadInitialData(); // Panggil muat data HANYA jika sudah login
             } else {
-                // Pengguna TIDAK LOGIN.
-                console.log('Penjaga: Akses ditolak. Mengalihkan ke login...');
-                // Tendang dia ke halaman login
-                window.location.href = 'login.html';
+                window.location.href = 'login.html'; // Tendang jika belum login
             }
         });
 
-        // --- Bagian 3: Muat Data (Sekarang jadi fungsi) ---
+        // --- Bagian 3: Muat Data (Update) ---
         function loadInitialData() {
             refConfig.once('value', (snapshot) => {
                 if (snapshot.exists()) {
                     const config = snapshot.val();
-                    if (config.media) {
-                        elMediaType.value = config.media.tipe;
-                        elMediaSumber.value = config.media.sumber;
-                        const audioLevel = config.media.audio || 0;
-                        elMediaAudio.value = audioLevel;
-                        elVolumeLabel.innerText = `${audioLevel}%`;
-                    }
-                    if (config.marquee) {
-                        elMarqueeTeks.value = config.marquee.teks;
-                    }
+                    
+                    // (BARU) Muat data Tampilan Aktif
+                    elTampilanAktif.value = config.tampilan_aktif || 'antrian';
+
+                    if (config.media) { /* ... (muat data media) ... */ }
+                    if (config.marquee) { /* ... (muat data marquee) ... */ }
                 } else {
-                    elMediaAudio.value = 0;
-                    elVolumeLabel.innerText = `0%`;
+                    // (Isi data awal jika config kosong)
+                    elTampilanAktif.value = 'antrian';
+                    // ... (data awal lainnya) ...
                 }
             });
         }
 
-        // --- Bagian 4: Fungsi Simpan (Tidak berubah) ---
+        // --- Bagian 4: Fungsi Simpan Perubahan (Update) ---
         function saveConfig() {
+            // 1. Ambil nilai baru
+            const newTampilanAktif = elTampilanAktif.value; // <-- BARU
             const newTipe = elMediaType.value;
             const newSumber = elMediaSumber.value;
             const newAudio = parseInt(elMediaAudio.value, 10);
             const newMarquee = elMarqueeTeks.value;
+
+            // 2. Buat objek 'config' baru
             const newConfig = {
-                media: { tipe: newTipe, sumber: newSumber, audio: newAudio },
-                marquee: { teks: newMarquee }
+                tampilan_aktif: newTampilanAktif, // <-- BARU
+                media: {
+                    tipe: newTipe,
+                    sumber: newSumber,
+                    audio: newAudio
+                },
+                marquee: {
+                    teks: newMarquee
+                }
+                // (Nanti kita tambahkan 'iklan_slideshow' di sini)
             };
+
+            // 3. Simpan (Set) data baru ini ke Firebase
             refConfig.set(newConfig)
                 .then(() => {
-                    elStatus.innerText = "Sukses tersimpan! Volume diatur ke " + newAudio + "%.";
+                    elStatus.innerText = "Sukses tersimpan! Display akan update.";
                     setTimeout(() => { elStatus.innerText = ""; }, 3000);
                 });
         }
         
         // (Event listener untuk slider tidak berubah)
-        elMediaAudio.oninput = () => {
-            elVolumeLabel.innerText = `${elMediaAudio.value}%`;
-        };
+        elMediaAudio.oninput = () => { /* ... */ };
     </script>
 </body>
 </html>
