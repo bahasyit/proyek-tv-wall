@@ -34,7 +34,11 @@
     </div>
 
     <div id="view-container">
-        <iframe id="view-frame" src="about:blank" allow="autoplay"></iframe>
+        <iframe 
+            id="view-frame" 
+            src="about:blank" 
+            allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+        ></iframe>
         </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -52,14 +56,14 @@
         
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        const refConfig = database.ref('config/tampilan_aktif'); // Langsung ke data yang kita mau
+        const refConfig = database.ref('config/tampilan_aktif'); 
 
         // --- 2. Elemen "Cangkang" ---
         const elViewFrame = document.getElementById('view-frame');
         const elStartOverlay = document.getElementById('start-overlay');
         const elStartButton = document.getElementById('start-button');
         
-        let tampilanAktifSekarang = ""; // HARUS selalu "antrian", "iklan", dll.
+        let tampilanAktifSekarang = ""; 
 
         // --- 3. Fungsi Helper untuk ganti tampilan ---
         function gantiTampilan(namaTampilan) {
@@ -72,7 +76,6 @@
             let urlTampilanBaru = '';
             if (namaTampilan === 'antrian') urlTampilanBaru = 'view_antrian.html';
             else if (namaTampilan === 'iklan') urlTampilanBaru = 'view_iklan.html';
-            else if (namaTampilan === 'jadwal') urlTampilanBaru = 'view_jadwal.html';
             else urlTampilanBaru = 'view_antrian.html'; // Default
 
             elViewFrame.src = urlTampilanBaru;
@@ -89,7 +92,7 @@
         // --- 5. Cek Tampilan Awal ---
         function loadInitialView() {
             refConfig.once('value', (snapshot) => {
-                let tampilanAwal = 'antrian'; // Default "antrian"
+                let tampilanAwal = 'antrian'; 
                 if (snapshot.exists()) {
                     tampilanAwal = snapshot.val();
                 } else {
@@ -102,15 +105,8 @@
         // --- 6. LOGIKA Tombol Start ---
         elStartButton.onclick = function() {
             elStartOverlay.style.display = 'none';
-            
-            // (PENTING) Muat halaman "dummy" untuk "mengaktifkan" audio
-            // Ini memberi izin audio ke 'iframe'
-            elViewFrame.src = "about:blank"; 
-            
-            // Mulai memuat tampilan awal
+            elViewFrame.src = "about:blank"; // Muat dummy page
             loadInitialView();
-            
-            // Mulai mendengarkan perubahan tampilan
             setupConfigListener();
         }
     </script>
