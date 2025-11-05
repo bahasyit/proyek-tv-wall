@@ -13,13 +13,8 @@
         legend { font-size: 1.2em; font-weight: bold; color: #007bff; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
         input[type="text"], input[type="email"], input[type="password"], select { 
-            box-sizing: border-box; 
-            width: 100%; 
-            padding: 10px; 
-            margin-bottom: 15px; 
-            border: 1px solid #ccc; 
-            border-radius: 5px; 
-            font-size: 16px; 
+            box-sizing: border-box; width: 100%; padding: 10px; margin-bottom: 15px; 
+            border: 1px solid #ccc; border-radius: 5px; font-size: 16px; 
         }
         button { display: block; width: 100%; padding: 15px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; background-color: #007bff; color: white; }
         button:hover { background-color: #0069d9; }
@@ -30,13 +25,12 @@
         input[type="range"] { flex: 1; }
         #volume-label { font-size: 16px; font-weight: bold; min-width: 45px; text-align: right; }
         
-        /* -- Style BARU untuk Modul Iklan -- */
         .iklan-input-group { display: flex; gap: 10px; margin-bottom: 15px; }
         .iklan-input-group input { flex: 1; margin-bottom: 0; }
         .iklan-input-group button { width: auto; padding: 10px 15px; font-size: 16px; background-color: #28a745; }
         .iklan-input-group button:hover { background-color: #218838; }
         
-        #daftar-iklan-container { max-height: 150px; overflow-y: auto; background: #f9f9f9; border: 1px solid #eee; border-radius: 5px; padding: 10px; }
+        .daftar-iklan-container { max-height: 150px; overflow-y: auto; background: #f9f9f9; border: 1px solid #eee; border-radius: 5px; padding: 10px; }
         .iklan-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #ddd; font-size: 14px; }
         .iklan-item:last-child { border-bottom: none; }
         .iklan-item span { word-break: break-all; padding-right: 10px; }
@@ -56,42 +50,36 @@
             <select id="tampilan-aktif">
                 <option value="antrian">Tampilan Antrian (4-Kotak)</option>
                 <option value="iklan">Tampilan Iklan (3-Kolom)</option>
-                <option value="jadwal">Tampilan Jadwal (Segera Hadir)</option>
             </select>
         </fieldset>
 
         <fieldset>
             <legend>Pengaturan Media (Video)</legend>
-            <div class="form-row">
-                <div class="form-col">
-                    <label for="media-tipe">Tipe Media:</label>
-                    <select id="media-tipe">
-                        <option value="youtube">YouTube (Playlist)</option>
-                        <option value="m3u8">M3U8 (Live Stream)</option>
-                    </select>
-                </div>
-                <div class="form-col">
-                    <label for="media-audio">Volume Video:</label>
-                    <div class="volume-slider">
-                        <input type="range" id="media-audio" min="0" max="100" value="0">
-                        <span id="volume-label">0%</span>
-                    </div>
-                </div>
-            </div>
-            <label for="media-sumber">Sumber Media (ID Playlist atau URL M3U8):</label>
-            <input type="text" id="media-sumber" placeholder="Contoh: PLLZ0qJ... atau https://...m3u8">
+            <div class="form-row">...</div>
+            <label for="media-sumber">Sumber Media...</label>
+            <input type="text" id="media-sumber" ...>
         </fieldset>
         
         <fieldset>
-            <legend>Pengaturan Iklan Vertikal (Slideshow)</legend>
-            <label for="iklan-url">URL Gambar Iklan Baru:</label>
+            <legend>Pengaturan Iklan Kiri (Vertikal)</legend>
+            <label for="iklan-url-kiri">URL Gambar Iklan Baru:</label>
             <div class="iklan-input-group">
-                <input type="text" id="iklan-url" placeholder="https://.../gambar-iklan.jpg">
-                <button onclick="tambahIklan()">Tambah</button>
+                <input type="text" id="iklan-url-kiri" placeholder="https://.../gambar-iklan-kiri.jpg">
+                <button onclick="tambahIklan('kiri')">Tambah</button>
             </div>
-            <label>Daftar Iklan Saat Ini:</label>
-            <div id="daftar-iklan-container">
-                </div>
+            <label>Daftar Iklan Kiri Saat Ini:</label>
+            <div id="daftar-iklan-kiri" class="daftar-iklan-container"></div>
+        </fieldset>
+        
+        <fieldset>
+            <legend>Pengaturan Iklan Kanan (Vertikal)</legend>
+            <label for="iklan-url-kanan">URL Gambar Iklan Baru:</label>
+            <div class="iklan-input-group">
+                <input type="text" id="iklan-url-kanan" placeholder="https://.../gambar-iklan-kanan.jpg">
+                <button onclick="tambahIklan('kanan')">Tambah</button>
+            </div>
+            <label>Daftar Iklan Kanan Saat Ini:</label>
+            <div id="daftar-iklan-kanan" class="daftar-iklan-container"></div>
         </fieldset>
         <fieldset>
             <legend>Pengaturan Teks Berjalan</legend>
@@ -100,7 +88,6 @@
         </fieldset>
         
         <br>
-        
         <button onclick="saveConfig()">Simpan Semua Perubahan</button>
         <div id="status"></div>
     </div>
@@ -111,16 +98,7 @@
 
     <script>
         // --- Bagian 1: KONFIGURASI FIREBASE ---
-        const firebaseConfig = {
-          apiKey: "AIzaSyDnl0AJU10tBXze8u4nDdZoaAUFo8ypFiQ",
-          authDomain: "project-tv-wall.firebaseapp.com",
-          databaseURL: "https://project-tv-wall-default-rtdb.asia-southeast1.firebasedatabase.app",
-          projectId: "project-tv-wall",
-          storageBucket: "project-tv-wall.firebasestorage.app",
-          messagingSenderId: "562728437251",
-          appId: "1:562728437251:web:85e9f229b6e4d02b4f7036"
-        };
-        
+        const firebaseConfig = { /* ... (Config Anda) ... */ };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const auth = firebase.auth();
@@ -136,11 +114,14 @@
         const elStatus = document.getElementById('status');
         
         // (BARU) Elemen Modul Iklan
-        const elIklanUrl = document.getElementById('iklan-url');
-        const elDaftarIklan = document.getElementById('daftar-iklan-container');
+        const elIklanUrlKiri = document.getElementById('iklan-url-kiri');
+        const elDaftarIklanKiri = document.getElementById('daftar-iklan-kiri');
+        const elIklanUrlKanan = document.getElementById('iklan-url-kanan');
+        const elDaftarIklanKanan = document.getElementById('daftar-iklan-kanan');
         
         // (BARU) Variabel lokal untuk menyimpan daftar iklan
-        let daftarIklanTerkini = [];
+        let daftarIklanKiri = [];
+        let daftarIklanKanan = [];
 
         // --- Bagian 3: "Skrip Penjaga" Login ---
         auth.onAuthStateChanged((user) => {
@@ -153,92 +134,78 @@
             refConfig.once('value', (snapshot) => {
                 if (snapshot.exists()) {
                     const config = snapshot.val();
-                    
                     elTampilanAktif.value = config.tampilan_aktif || 'antrian';
                     if (config.media) { /* ... (muat data media) ... */ }
                     if (config.marquee) { /* ... (muat data marquee) ... */ }
 
-                    // (BARU) Muat data Iklan Slideshow
-                    if (config.iklan_slideshow) {
-                        daftarIklanTerkini = config.iklan_slideshow;
-                    }
-                    renderDaftarIklan(); // Tampilkan daftar iklan
+                    // (BARU) Muat data Iklan Kiri & Kanan
+                    if (config.iklan_kiri) daftarIklanKiri = config.iklan_kiri;
+                    if (config.iklan_kanan) daftarIklanKanan = config.iklan_kanan;
+                    renderDaftarIklan('kiri');
+                    renderDaftarIklan('kanan');
                     
-                } else {
-                    // ... (data awal jika config kosong) ...
-                }
+                } else { /* ... (data awal jika config kosong) ... */ }
             });
         }
         
-        // --- (BARU) Bagian 5: Fungsi Modul Iklan ---
-        
-        // (BARU) Fungsi untuk menampilkan daftar iklan di CMS
-        function renderDaftarIklan() {
-            elDaftarIklan.innerHTML = ''; // Kosongkan daftar
-            if (daftarIklanTerkini.length === 0) {
-                elDaftarIklan.innerHTML = '<p>Belum ada iklan ditambahkan.</p>';
+        // --- Bagian 5: Fungsi Modul Iklan (Di-upgrade) ---
+        function renderDaftarIklan(sisi) {
+            const container = (sisi === 'kiri') ? elDaftarIklanKiri : elDaftarIklanKanan;
+            const daftar = (sisi === 'kiri') ? daftarIklanKiri : daftarIklanKanan;
+            
+            container.innerHTML = '';
+            if (daftar.length === 0) {
+                container.innerHTML = '<p>Belum ada iklan.</p>';
                 return;
             }
-            
-            daftarIklanTerkini.forEach((url, index) => {
-                elDaftarIklan.innerHTML += `
+            daftar.forEach((url, index) => {
+                container.innerHTML += `
                     <div class="iklan-item">
                         <span>${url}</span>
-                        <button onclick="hapusIklan(${index})">Hapus</button>
+                        <button onclick="hapusIklan('${sisi}', ${index})">Hapus</button>
                     </div>
                 `;
             });
         }
-
-        // (BARU) Fungsi tombol "Tambah"
-        function tambahIklan() {
-            const newUrl = elIklanUrl.value;
+        function tambahIklan(sisi) {
+            const input = (sisi === 'kiri') ? elIklanUrlKiri : elIklanUrlKanan;
+            const daftar = (sisi === 'kiri') ? daftarIklanKiri : daftarIklanKanan;
+            
+            const newUrl = input.value;
             if (newUrl.startsWith('http')) {
-                daftarIklanTerkini.push(newUrl); // Tambah ke array lokal
-                elIklanUrl.value = ''; // Kosongkan textbox
-                renderDaftarIklan(); // Update tampilan daftar
+                daftar.push(newUrl);
+                input.value = '';
+                renderDaftarIklan(sisi);
             } else {
-                alert('URL tidak valid. Harap masukkan URL lengkap (diawali http... atau https...)');
+                alert('URL tidak valid. Harap masukkan URL lengkap.');
             }
         }
-        
-        // (BARU) Fungsi tombol "Hapus"
-        function hapusIklan(index) {
-            daftarIklanTerkini.splice(index, 1); // Hapus dari array lokal
-            renderDaftarIklan(); // Update tampilan daftar
+        function hapusIklan(sisi, index) {
+            const daftar = (sisi === 'kiri') ? daftarIklanKiri : daftarIklanKanan;
+            daftar.splice(index, 1);
+            renderDaftarIklan(sisi);
         }
 
         // --- Bagian 6: Fungsi Simpan Perubahan (Di-upgrade) ---
         function saveConfig() {
-            // 1. Ambil semua nilai baru dari form
-            const newTampilanAktif = elTampilanAktif.value;
-            const newTipe = elMediaType.value;
-            const newSumber = elMediaSumber.value;
-            const newAudio = parseInt(elMediaAudio.value, 10);
-            const newMarquee = elMarqueeTeks.value;
-            // (BARU) Ambil daftar iklan dari array lokal
-            const newDaftarIklan = daftarIklanTerkini;
-
-            // 2. Buat objek 'config' baru
             const newConfig = {
-                tampilan_aktif: newTampilanAktif,
+                tampilan_aktif: elTampilanAktif.value,
                 media: {
-                    tipe: newTipe,
-                    sumber: newSumber,
-                    audio: newAudio
+                    tipe: elMediaType.value,
+                    sumber: elMediaSumber.value,
+                    audio: parseInt(elMediaAudio.value, 10)
                 },
                 marquee: {
-                    teks: newMarquee
+                    teks: elMarqueeTeks.value
                 },
-                iklan_slideshow: newDaftarIklan // <-- SIMPAN DAFTAR IKLAN
+                iklan_kiri: daftarIklanKiri,   // <-- SIMPAN DAFTAR KIRI
+                iklan_kanan: daftarIklanKanan // <-- SIMPAN DAFTAR KANAN
             };
 
-            // 3. Simpan (Set) data baru ini ke Firebase
-            refConfig.set(newConfig)
-                .then(() => {
-                    elStatus.innerText = "Sukses tersimpan! Display akan update.";
-                    setTimeout(() => { elStatus.innerText = ""; }, 3000);
-                });
+            refConfig.set(newConfig).then(() => {
+                elStatus.innerText = "Sukses tersimpan! Display akan update.";
+                setTimeout(() => { elStatus.innerText = ""; }, 3000);
+            });
         }
         
         // --- Bagian 7: Event Listener Slider ---

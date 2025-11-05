@@ -1,5 +1,5 @@
 /* ========================================
-   FILE STYLE_IKLAN.CSS (v3 - FINAL SLIDESHOW)
+   FILE STYLE_IKLAN.CSS (v4 - FINAL CAROUSEL)
    ======================================== */
 
 body, html {
@@ -11,7 +11,7 @@ body, html {
     background-position: center;
 }
 
-/* Peta Grid (Sudah Benar) */
+/* Peta Grid (Tidak berubah) */
 .grid-container {
     display: grid;
     height: 100vh;
@@ -47,30 +47,40 @@ body, html {
   !! PERUBAHAN PENTING: IKLAN KIRI & KANAN !!
   ========================================
 */
-.iklan-kiri {
+.iklan-kiri, .iklan-kanan {
     grid-area: iklan-kiri;
-    /* (Kita hapus teks vertikal) */
-    
-    /* (BARU) Style untuk Slideshow Background */
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    transition: background-image 0.5s ease-in-out; /* Efek fade */
-    padding: 0; /* Hapus padding agar gambar menempel */
+    padding: 0; /* Hapus padding agar Swiper menempel */
+    overflow: hidden; /* Sembunyikan slide yang tidak aktif */
 }
 .iklan-kanan {
     grid-area: iklan-kanan;
-    /* (Kita hapus teks vertikal) */
+}
+
+/* (BARU) Style untuk Swiper.js */
+.swiper {
+    width: 100%;
+    height: 100%;
+}
+.swiper-slide {
+    width: 100%;
+    height: 100%;
     
-    /* (BARU) Style untuk Slideshow Background */
+    /* Style untuk gambar di dalam slide */
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    transition: background-image 0.5s ease-in-out; /* Efek fade */
-    padding: 0;
+    
+    /* (Opsional) Tampilkan teks jika gambar gagal dimuat */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5vw;
+    text-align: center;
+    color: #ccc;
 }
 
-/* Styling Konten (Jam, Cuaca, dll) */
+
+/* Styling Konten (Jam, Cuaca, dll - Tidak berubah) */
 #jam-digital { font-size: 3.5vw; }
 #antrian-mini { font-size: 3vw; margin-top: 15px; color: #f0f0f0; text-shadow: 1px 1px 3px #000; }
 .cuaca-suhu-grup { font-size: 3.5vw; font-weight: bold; }
@@ -87,6 +97,5 @@ body, html {
 .marquee-wrapper > span { padding-right: 50px; }
 @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-/* Tombol Start Overlay (Tidak berubah) */
-#start-overlay { /* ... (CSS Tombol Start Anda) ... */ }
-#start-button { /* ... (CSS Tombol Start Anda) ... */ }
+/* Tombol Start Overlay (HAPUS dari sini, pindah ke index.html) */
+#start-overlay { display: none; } /* Sudah tidak dipakai di view ini */
