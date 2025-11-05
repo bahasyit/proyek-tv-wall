@@ -55,11 +55,25 @@
 
         <fieldset>
             <legend>Pengaturan Media (Video)</legend>
-            <div class="form-row">...</div>
-            <label for="media-sumber">Sumber Media...</label>
-            <input type="text" id="media-sumber" ...>
+            <div class="form-row">
+                <div class="form-col">
+                    <label for="media-tipe">Tipe Media:</label>
+                    <select id="media-tipe">
+                        <option value="youtube">YouTube (Playlist)</option>
+                        <option value="m3u8">M3U8 (Live Stream)</option>
+                    </select>
+                </div>
+                <div class="form-col">
+                    <label for="media-audio">Volume Video:</label>
+                    <div class="volume-slider">
+                        <input type="range" id="media-audio" min="0" max="100" value="0">
+                        <span id="volume-label">0%</span>
+                    </div>
+                </div>
+            </div>
+            <label for="media-sumber">Sumber Media (ID Playlist atau URL M3U8):</label>
+            <input type="text" id="media-sumber" placeholder="Contoh: PLLZ0qJ... atau https://...m3u8">
         </fieldset>
-        
         <fieldset>
             <legend>Pengaturan Iklan Kiri (Vertikal)</legend>
             <label for="iklan-url-kiri">URL Gambar Iklan Baru:</label>
@@ -81,6 +95,7 @@
             <label>Daftar Iklan Kanan Saat Ini:</label>
             <div id="daftar-iklan-kanan" class="daftar-iklan-container"></div>
         </fieldset>
+        
         <fieldset>
             <legend>Pengaturan Teks Berjalan</legend>
             <label for="marquee-teks">Teks Marquee:</label>
@@ -98,7 +113,16 @@
 
     <script>
         // --- Bagian 1: KONFIGURASI FIREBASE ---
-        const firebaseConfig = { /* ... (Config Anda) ... */ };
+        const firebaseConfig = {
+          apiKey: "AIzaSyDnl0AJU10tBXze8u4nDdZoaAUFo8ypFiQ",
+          authDomain: "project-tv-wall.firebaseapp.com",
+          databaseURL: "https://project-tv-wall-default-rtdb.asia-southeast1.firebasedatabase.app",
+          projectId: "project-tv-wall",
+          storageBucket: "project-tv-wall.firebasestorage.app",
+          messagingSenderId: "562728437251",
+          appId: "1:562728437251:web:85e9f229b6e4d02b4f7036"
+        };
+        
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const auth = firebase.auth();
@@ -112,14 +136,11 @@
         const elVolumeLabel = document.getElementById('volume-label');
         const elMarqueeTeks = document.getElementById('marquee-teks');
         const elStatus = document.getElementById('status');
-        
-        // (BARU) Elemen Modul Iklan
         const elIklanUrlKiri = document.getElementById('iklan-url-kiri');
         const elDaftarIklanKiri = document.getElementById('daftar-iklan-kiri');
         const elIklanUrlKanan = document.getElementById('iklan-url-kanan');
         const elDaftarIklanKanan = document.getElementById('daftar-iklan-kanan');
         
-        // (BARU) Variabel lokal untuk menyimpan daftar iklan
         let daftarIklanKiri = [];
         let daftarIklanKanan = [];
 
@@ -129,26 +150,40 @@
             else { window.location.href = 'login.html'; }
         });
 
-        // --- Bagian 4: Muat Data (Di-upgrade) ---
+        // --- Bagian 4: Muat Data (Lengkap) ---
         function loadInitialData() {
             refConfig.once('value', (snapshot) => {
                 if (snapshot.exists()) {
                     const config = snapshot.val();
+                    
                     elTampilanAktif.value = config.tampilan_aktif || 'antrian';
-                    if (config.media) { /* ... (muat data media) ... */ }
-                    if (config.marquee) { /* ... (muat data marquee) ... */ }
 
-                    // (BARU) Muat data Iklan Kiri & Kanan
+                    if (config.media) {
+                        elMediaType.value = config.media.tipe || 'youtube';
+                        elMediaSumber.value = config.media.sumber || '';
+                        const audioLevel = config.media.audio || 0;
+                        elMediaAudio.value = audioLevel;
+                        elVolumeLabel.innerText = `${audioLevel}%`;
+                    }
+                    if (config.marquee) {
+                        elMarqueeTeks.value = config.marquee.teks || '';
+                    }
                     if (config.iklan_kiri) daftarIklanKiri = config.iklan_kiri;
                     if (config.iklan_kanan) daftarIklanKanan = config.iklan_kanan;
                     renderDaftarIklan('kiri');
                     renderDaftarIklan('kanan');
                     
-                } else { /* ... (data awal jika config kosong) ... */ }
+                } else {
+                    elTampilanAktif.value = 'antrian';
+                    elMediaType.value = 'youtube';
+                    elMediaAudio.value = 0;
+                    elVolumeLabel.innerText = `0%`;
+                    elMarqueeTeks.value = 'Selamat Datang';
+                }
             });
         }
         
-        // --- Bagian 5: Fungsi Modul Iklan (Di-upgrade) ---
+        // --- Bagian 5: Fungsi Modul Iklan (Lengkap) ---
         function renderDaftarIklan(sisi) {
             const container = (sisi === 'kiri') ? elDaftarIklanKiri : elDaftarIklanKanan;
             const daftar = (sisi === 'kiri') ? daftarIklanKiri : daftarIklanKanan;
@@ -186,7 +221,7 @@
             renderDaftarIklan(sisi);
         }
 
-        // --- Bagian 6: Fungsi Simpan Perubahan (Di-upgrade) ---
+        // --- Bagian 6: Fungsi Simpan Perubahan (Lengkap) ---
         function saveConfig() {
             const newConfig = {
                 tampilan_aktif: elTampilanAktif.value,
@@ -198,8 +233,8 @@
                 marquee: {
                     teks: elMarqueeTeks.value
                 },
-                iklan_kiri: daftarIklanKiri,   // <-- SIMPAN DAFTAR KIRI
-                iklan_kanan: daftarIklanKanan // <-- SIMPAN DAFTAR KANAN
+                iklan_kiri: daftarIklanKiri,
+                iklan_kanan: daftarIklanKanan
             };
 
             refConfig.set(newConfig).then(() => {
@@ -208,8 +243,10 @@
             });
         }
         
-        // --- Bagian 7: Event Listener Slider ---
-        elMediaAudio.oninput = () => { /* ... (tidak berubah) ... */ };
+        // --- Bagian 7: Event Listener Slider (Lengkap) ---
+        elMediaAudio.oninput = () => {
+            elVolumeLabel.innerText = `${elMediaAudio.value}%`;
+        };
     </script>
 </body>
 </html>
