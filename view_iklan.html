@@ -8,10 +8,6 @@
 </head>
 <body>
 
-    <div id="start-overlay">
-        <button id="start-button">KLIK UNTUK MEMULAI</button>
-    </div>
-
     <div class="grid-container">
         
         <div class="grid-item jam">
@@ -39,6 +35,7 @@
         
         <div class="grid-item iklan-kanan" id="iklan-kanan">
             </div>
+
         <div class="grid-item footer">
             <div class="marquee-wrapper">
                 <span id="marquee-content-1">...</span>
@@ -59,7 +56,9 @@
           authDomain: "project-tv-wall.firebaseapp.com",
           databaseURL: "https://project-tv-wall-default-rtdb.asia-southeast1.firebasedatabase.app",
           projectId: "project-tv-wall",
-          // ... (Sisanya) ...
+          storageBucket: "project-tv-wall.firebasestorage.app",
+          messagingSenderId: "562728437251",
+          appId: "1:562728437251:web:85e9f229b6e4d02b4f7036"
         };
         
         firebase.initializeApp(firebaseConfig);
@@ -79,13 +78,10 @@
         const elHlsPlayer = document.getElementById('hls-player');
         const elMarqueeContent1 = document.getElementById('marquee-content-1');
         const elMarqueeContent2 = document.getElementById('marquee-content-2');
-        
-        // (BARU) Elemen Slideshow Iklan
         const elIklanKiri = document.getElementById('iklan-kiri');
         const elIklanKanan = document.getElementById('iklan-kanan');
-        let slideInterval = null; // Variabel untuk menyimpan interval slideshow
+        let slideInterval = null; 
         
-        // (Kunci API Cuaca)
         const apiKey = "f8adb77a7650f3cc5547cb447fab0b86";
         const kota = "Bekasi";
 
@@ -118,7 +114,6 @@
         }
 
         // --- Bagian 4: FUNGSI PLAYER (LENGKAP & BENAR) ---
-        // (Ini akan memperbaiki masalah video hitam Anda)
         window.onYouTubeIframeAPIReady = function() { }
         function loadYouTubePlayer(sumber, audioLevel) {
             elYoutubePlayerDiv.classList.remove('hidden');
@@ -159,14 +154,10 @@
             refConfig.on('value', (snapshot) => {
                 const config = snapshot.val();
                 if (!config) return; 
-                
-                // 1. Update Marquee
                 if (config.marquee && config.marquee.teks) {
                     elMarqueeContent1.innerText = config.marquee.teks;
                     elMarqueeContent2.innerText = config.marquee.teks;
                 }
-                
-                // 2. Update Media Player
                 if (config.media) {
                     const media = config.media;
                     const audioLevel = media.audio || 0; 
@@ -176,64 +167,53 @@
                         loadHlsPlayer(media.sumber, audioLevel);
                     }
                 }
-                
-                // 3. (BARU) Update Iklan Slideshow
                 if (config.iklan_slideshow && config.iklan_slideshow.length > 0) {
-                    // Ada iklan, mulai slideshow
                     startSlideshow(config.iklan_slideshow);
                 } else {
-                    // Tidak ada iklan, hentikan slideshow
                     stopSlideshow();
                 }
             });
         }
         
-        // --- (BARU) Bagian 6: Logika Slideshow Iklan ---
+        // --- Bagian 6: Logika Slideshow Iklan ---
         function startSlideshow(daftarUrl) {
-            stopSlideshow(); // Hentikan slideshow lama (jika ada)
-            
+            stopSlideshow(); 
             let slideIndex = 0;
-            
-            // Fungsi untuk ganti gambar
             function gantiSlide() {
-                if (daftarUrl.length === 0) return; // Berhenti jika daftar dikosongkan
-                
-                // Ambil URL berikutnya (looping)
+                if (daftarUrl.length === 0) return;
                 const urlGambar = daftarUrl[slideIndex % daftarUrl.length];
-                
-                // Set gambar sebagai background
                 elIklanKiri.style.backgroundImage = `url(${urlGambar})`;
                 elIklanKanan.style.backgroundImage = `url(${urlGambar})`;
-                
-                slideIndex++; // Pindah ke slide berikutnya
+                slideIndex++;
             }
-            
-            gantiSlide(); // Ganti slide pertama kali
-            
-            // Atur interval untuk ganti slide setiap 15 detik (15000 ms)
+            gantiSlide(); 
             slideInterval = setInterval(gantiSlide, 15000); 
         }
-
         function stopSlideshow() {
             if (slideInterval) {
                 clearInterval(slideInterval);
                 slideInterval = null;
             }
-            // Hapus gambar
             elIklanKiri.style.backgroundImage = 'none';
             elIklanKanan.style.backgroundImage = 'none';
         }
 
-        // --- Bagian 7: TOMBOL START (LENGKAP) ---
-        const startButton = document.getElementById('start-button');
-        const startOverlay = document.getElementById('start-overlay');
-        startButton.onclick = function() {
-            startOverlay.style.display = 'none';
-            setInterval(updateClock, 1000); updateClock(); 
-            fetchWeather(); setInterval(fetchWeather, 1800000); 
-            setupAntrianListener();
-            setupConfigListener();
-        }
+        // --- Bagian 7: JALANKAN OTOMATIS (DIPERBAIKI) ---
+        
+        // 1. Mulai jam
+        setInterval(updateClock, 1000); 
+        updateClock(); // Jalankan sekali
+
+        // 2. Mulai cuaca
+        fetchWeather(); // Jalankan sekali
+        setInterval(fetchWeather, 1800000); // Ulangi tiap 30 menit
+
+        // 3. Mulai dengarkan antrian
+        setupAntrianListener();
+        
+        // 4. !! INI DIA PERBAIKANNYA !!
+        setupConfigListener();
+        
     </script>
 </body>
 </html>

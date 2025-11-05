@@ -3,14 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Display Lobi Sekolah (v3.4 - Shield Fix)</title>
-    <link rel="stylesheet" href="style_antrian.css">
+    <title>Display Antrian</title>
+    <link rel="stylesheet" href="style_antrian.css"> 
 </head>
 <body>
-
-    <div id="start-overlay">
-        <button id="start-button">KLIK UNTUK MEMULAI DISPLAY</button>
-    </div>
 
     <div class="grid-container">
         
@@ -21,9 +17,9 @@
         <div class="grid-item video">
             <div id="youtube-player"></div>
             <video id="hls-player" class="hidden" autoplay muted loop playsinline></video>
-            
             <div id="media-shield"></div>
         </div>
+
         <div class="grid-item antrian">
             <h2>Nomor Antrian</h2>
             <div class="nomor-utama">
@@ -53,8 +49,7 @@
         <div class="grid-item footer">
             <div class="marquee-wrapper">
                 <span id="marquee-content-1">...</span>
-                <span id="marquee-content-2">...</span>
-            </div>
+                <span id="marquee-content-2">...</span> </div>
         </div>
     </div>
 
@@ -149,7 +144,6 @@
         function loadYouTubePlayer(sumber, audioLevel) {
             elYoutubePlayerDiv.classList.remove('hidden');
             elHlsPlayer.classList.add('hidden');
-            elHlsPlayer.pause();
             if (hlsInstance) hlsInstance.destroy();
             const isMuted = (audioLevel === 0);
             if (ytPlayer === null) {
@@ -186,6 +180,9 @@
                 hlsInstance.loadSource(sumber);
                 hlsInstance.attachMedia(elHlsPlayer);
                 hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => { elHlsPlayer.play(); });
+            } else if (elHlsPlayer.canPlayType('application/vnd.apple.mpegurl')) {
+                elHlsPlayer.src = sumber;
+                elHlsPlayer.play();
             }
         }
 
@@ -211,16 +208,22 @@
             });
         }
 
-        // --- Bagian 7: TOMBOL START (LENGKAP) ---
-        const startButton = document.getElementById('start-button');
-        const startOverlay = document.getElementById('start-overlay');
-        startButton.onclick = function() {
-            startOverlay.style.display = 'none';
-            setInterval(updateClock, 1000); updateClock(); 
-            fetchWeather(); setInterval(fetchWeather, 1800000); 
-            setupAntrianListener();
-            setupConfigListener();
-        }
+        // --- Bagian 7: JALANKAN OTOMATIS (DIPERBAIKI) ---
+        
+        // 1. Mulai jam
+        setInterval(updateClock, 1000); 
+        updateClock(); // Jalankan sekali
+
+        // 2. Mulai cuaca
+        fetchWeather(); // Jalankan sekali
+        setInterval(fetchWeather, 1800000); // Ulangi tiap 30 menit
+
+        // 3. Mulai dengarkan antrian
+        setupAntrianListener();
+        
+        // 4. !! INI DIA PERBAIKANNYA !!
+        setupConfigListener();
+        
     </script>
 </body>
 </html>
