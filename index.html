@@ -3,29 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Display Lobi Utama</title>
-    <style>
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; }
-        #view-container { width: 100%; height: 100%; position: relative; }
-        #view-frame { width: 100%; height: 100%; border: none; }
-        
-        /* (CSS Tombol Start Anda) */
-        #start-overlay {
-            position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex; justify-content: center; align-items: center;
-            z-index: 9999;
-        }
-        #start-button {
-            padding: 25px 50px; font-size: 2vw; font-weight: bold;
-            color: #333; background-color: #f0f0f0;
-            border: none; border-radius: 10px; cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            transition: all 0.2s ease;
-        }
-        #start-button:hover { background-color: #ffffff; transform: scale(1.05); }
-    </style>
+    <title>Display Lobi Utama (SPA v4.0)</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
 </head>
 <body>
 
@@ -33,80 +13,383 @@
         <button id="start-button">KLIK UNTUK MEMULAI DISPLAY</button>
     </div>
 
-    <div id="view-container">
-        <iframe 
-            id="view-frame" 
-            src="about:blank" 
-            allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
-        ></iframe>
+    <div id="view-antrian" class="view-container hidden">
+        <div class="grid-item header">
+            <h1>Welcome<br>Students</h1>
         </div>
+        <div class="grid-item video">
+            <div id="youtube-player"></div>
+            <video id="hls-player" class="hidden" autoplay muted loop playsinline></video>
+            <div id="media-shield"></div>
+        </div>
+        <div class="grid-item antrian">
+            <h2>Nomor Antrian</h2>
+            <div class="nomor-utama">
+                <span id="antrian-kode">...</span>
+                <span id="antrian-nomor">...</span>
+            </div>
+            <div class="nomor-sub" id="antrian-jenis">...</div>
+        </div>
+        <div class="grid-item jam">
+            <span id="jam-digital-antrian">00:00:00</span> WIB
+        </div>
+        <div class="grid-item cuaca">
+            <div class="cuaca-lokasi">
+                <span>Kota Bekasi</span>
+                <strong id="cuaca-deskripsi-antrian">Loading...</strong>
+            </div>
+            <div class="cuaca-suhu-grup">
+                <span id="cuaca-suhu-antrian">--</span>°C
+            </div>
+            <div class="cuaca-ikon">
+                <img id="cuaca-ikon-img-antrian" src="" alt="ikon cuaca">
+            </div>
+        </div>
+        <div class="grid-item footer">
+            <div class="marquee-wrapper">
+                <span id="marquee-content-1-antrian">...</span>
+                <span id="marquee-content-2-antrian">...</span>
+            </div>
+        </div>
+    </div>
+    
+    <div id="view-iklan" class="view-container hidden">
+        <div class="grid-item jam">
+            <span id="jam-digital-iklan">00:00:00</span> WIB
+            <div id="antrian-mini">...</div>
+        </div>
+        <div class="grid-item cuaca">
+            <div class="cuaca-suhu-grup">
+                <span id="cuaca-suhu-iklan">--</span>°C
+            </div>
+            <div class="cuaca-ikon">
+                <img id="cuaca-ikon-img-iklan" src="" alt="ikon cuaca">
+            </div>
+        </div>
+        <div class="grid-item iklan-kiri">
+            <div class="swiper" id="swiper-kiri">
+                <div class="swiper-wrapper" id="swiper-wrapper-kiri"></div>
+            </div>
+        </div>
+        <div class="grid-item video">
+            <div id="youtube-player-iklan"></div> 
+            <video id="hls-player-iklan" class="hidden" autoplay muted loop playsinline></video>
+            <div id="media-shield-iklan"></div>
+        </div>
+        <div class="grid-item iklan-kanan">
+            <div class="swiper" id="swiper-kanan">
+                <div class="swiper-wrapper" id="swiper-wrapper-kanan"></div>
+            </div>
+        </div>
+        <div class="grid-item footer">
+            <div class="marquee-wrapper">
+                <span id="marquee-content-1-iklan">...</span>
+                <span id="marquee-content-2-iklan">...</span>
+            </div>
+        </div>
+    </div>
+    
 
+    <audio id="bell-sound" src="bell.mp3" preload="auto"></audio>
+    
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
 
     <script>
-        // --- 1. Konfigurasi Firebase ---
+        // --- Bagian 1: KONFIGURASI & VARIABEL ---
         const firebaseConfig = {
           apiKey: "AIzaSyDnl0AJU10tBXze8u4nDdZoaAUFo8ypFiQ",
           authDomain: "project-tv-wall.firebaseapp.com",
           databaseURL: "https://project-tv-wall-default-rtdb.asia-southeast1.firebasedatabase.app",
           projectId: "project-tv-wall",
-          // ... (Sisanya) ...
+          storageBucket: "project-tv-wall.firebasestorage.app",
+          messagingSenderId: "562728437251",
+          appId: "1:562728437251:web:85e9f229b6e4d02b4f7036"
         };
         
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        const refConfig = database.ref('config/tampilan_aktif'); 
-
-        // --- 2. Elemen "Cangkang" ---
-        const elViewFrame = document.getElementById('view-frame');
-        const elStartOverlay = document.getElementById('start-overlay');
-        const elStartButton = document.getElementById('start-button');
+        const refAntrian = database.ref('antrian');
+        const refConfig = database.ref('config');
         
-        let tampilanAktifSekarang = ""; 
+        // Variabel Player (Global)
+        let hlsInstance = null;
+        let ytPlayer = null; 
+        let swiperKiri = null;
+        let swiperKanan = null;
+        let currentDisplayNomor = "";
+        
+        // Variabel Tampilan
+        const elViewAntrian = document.getElementById('view-antrian');
+        const elViewIklan = document.getElementById('view-iklan');
 
-        // --- 3. Fungsi Helper untuk ganti tampilan ---
-        function gantiTampilan(namaTampilan) {
-            if (!namaTampilan || namaTampilan === tampilanAktifSekarang) {
-                return;
-            }
-            console.log('Perintah diterima: Ganti tampilan ke ->', namaTampilan);
-            tampilanAktifSekarang = namaTampilan;
-            
-            let urlTampilanBaru = '';
-            if (namaTampilan === 'antrian') urlTampilanBaru = 'view_antrian.html';
-            else if (namaTampilan === 'iklan') urlTampilanBaru = 'view_iklan.html';
-            else urlTampilanBaru = 'view_antrian.html'; // Default
+        // Elemen Tampilan Antrian
+        const elBellSound = document.getElementById('bell-sound');
+        const elAntrianKode = document.getElementById('antrian-kode');
+        const elAntrianNomor = document.getElementById('antrian-nomor');
+        const elAntrianJenis = document.getElementById('antrian-jenis');
+        const elJamDigitalAntrian = document.getElementById('jam-digital-antrian');
+        const elCuacaSuhuAntrian = document.getElementById('cuaca-suhu-antrian');
+        const elCuacaDeskripsiAntrian = document.getElementById('cuaca-deskripsi-antrian');
+        const elCuacaIkonAntrian = document.getElementById('cuaca-ikon-img-antrian');
+        const elMarquee1Antrian = document.getElementById('marquee-content-1-antrian');
+        const elMarquee2Antrian = document.getElementById('marquee-content-2-antrian');
+        const elYoutubePlayerAntrian = 'youtube-player'; // Kirim ID sebagai string
+        const elHlsPlayerAntrian = document.getElementById('hls-player');
 
-            elViewFrame.src = urlTampilanBaru;
+        // Elemen Tampilan Iklan
+        const elAntrianMini = document.getElementById('antrian-mini');
+        const elJamDigitalIklan = document.getElementById('jam-digital-iklan');
+        const elCuacaSuhuIklan = document.getElementById('cuaca-suhu-iklan');
+        const elCuacaIkonIklan = document.getElementById('cuaca-ikon-img-iklan');
+        const elMarquee1Iklan = document.getElementById('marquee-content-1-iklan');
+        const elMarquee2Iklan = document.getElementById('marquee-content-2-iklan');
+        const elSwiperWrapperKiri = document.getElementById('swiper-wrapper-kiri');
+        const elSwiperWrapperKanan = document.getElementById('swiper-wrapper-kanan');
+        const elYoutubePlayerIklan = 'youtube-player-iklan'; // Kirim ID sebagai string
+        const elHlsPlayerIklan = document.getElementById('hls-player-iklan');
+        
+        // (Kunci API Cuaca)
+        const apiKey = "f8adb77a7650f3cc5547cb447fab0b86";
+        const kota = "Bekasi";
+
+        
+        // --- Bagian 2: FUNGSI JAM (UNIVERSAL) ---
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const timeString = `${hours}:${minutes}:${seconds}`;
+            // Update kedua jam
+            elJamDigitalAntrian.innerText = timeString;
+            elJamDigitalIklan.innerText = timeString;
         }
 
-        // --- 4. Pendengar (Listener) Utama ---
+        // --- Bagian 3: FUNGSI CUACA (UNIVERSAL) ---
+        function fetchWeather() {
+            const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${kota}&appid=${apiKey}&units=metric&lang=id`;
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.main) {
+                        const suhu = Math.round(data.main.temp);
+                        const deskripsi = data.weather[0].description;
+                        const ikonUrl = `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
+                        
+                        // Update Tampilan Antrian
+                        elCuacaSuhuAntrian.innerText = suhu;
+                        elCuacaDeskripsiAntrian.innerText = deskripsi;
+                        elCuacaIkonAntrian.src = ikonUrl;
+                        
+                        // Update Tampilan Iklan
+                        elCuacaSuhuIklan.innerText = suhu;
+                        elCuacaIkonIklan.src = ikonUrl;
+                    }
+                })
+                .catch(error => { 
+                    elCuacaDeskripsiAntrian.innerText = "Gagal memuat";
+                    console.error('Error cuaca:', error);
+                });
+        }
+        
+        // --- Bagian 4: FUNGSI ANTRIAN (UNIVERSAL) ---
+        function setupAntrianListener() {
+            refAntrian.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (!data) return; 
+                let nomorTigaDigit = String(data.nomor).padStart(3, '0');
+                
+                // Cek Bell
+                if (currentDisplayNomor !== "" && nomorTigaDigit !== currentDisplayNomor) {
+                    elBellSound.volume = 1.0; 
+                    elBellSound.currentTime = 0;
+                    elBellSound.play();
+                }
+                currentDisplayNomor = nomorTigaDigit;
+
+                // Update Tampilan Antrian
+                elAntrianKode.innerText = data.kode;
+                elAntrianNomor.innerText = nomorTigaDigit;
+                elAntrianJenis.innerText = data.jenis;
+                
+                // Update Tampilan Iklan
+                elAntrianMini.innerText = `${data.kode} ${nomorTigaDigit}`;
+            });
+        }
+
+        // --- Bagian 5: FUNGSI PLAYER (UNIVERSAL) ---
+        window.onYouTubeIframeAPIReady = function() { }
+
+        function loadYouTubePlayer(sumber, audioLevel, playerId) {
+            const isMuted = (audioLevel === 0);
+            
+            // Hancurkan player lama jika ada
+            if (ytPlayer) {
+                ytPlayer.destroy();
+                ytPlayer = null;
+            }
+            // Buat player baru
+            ytPlayer = new YT.Player(playerId, {
+                height: '100%', width: '100%',
+                playerVars: {
+                    'listType': 'playlist', 'list': sumber,
+                    'autoplay': 1, 'controls': 0, 'loop': 1,
+                    'modestbranding': 1, 'showinfo': 0,
+                    'mute': isMuted ? 1 : 0
+                },
+                events: {
+                    'onReady': (event) => {
+                        if (!isMuted) { event.target.setVolume(audioLevel); }
+                    }
+                }
+            });
+        }
+        
+        function loadHlsPlayer(sumber, audioLevel, playerElement) {
+            if (hlsInstance) hlsInstance.destroy(); // Hancurkan stream lama
+            
+            playerElement.muted = (audioLevel === 0);
+            playerElement.volume = audioLevel / 100;
+
+            if (Hls.isSupported()) {
+                hlsInstance = new Hls();
+                hlsInstance.loadSource(sumber);
+                hlsInstance.attachMedia(playerElement);
+                hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+                    playerElement.play();
+                });
+            } else if (playerElement.canPlayType('application/vnd.apple.mpegurl')) {
+                playerElement.src = sumber;
+                playerElement.play();
+            }
+        }
+        
+        function stopAllPlayers() {
+            if (ytPlayer) ytPlayer.destroy();
+            if (hlsInstance) hlsInstance.destroy();
+            ytPlayer = null;
+            hlsInstance = null;
+            elHlsPlayerAntrian.pause();
+            elHlsPlayerIklan.pause();
+        }
+
+        // --- Bagian 6: FUNGSI CMS & SLIDESHOW (UNIVERSAL) ---
         function setupConfigListener() {
             refConfig.on('value', (snapshot) => {
-                const tampilanBaru = snapshot.val();
-                gantiTampilan(tampilanBaru);
-            });
-        }
-
-        // --- 5. Cek Tampilan Awal ---
-        function loadInitialView() {
-            refConfig.once('value', (snapshot) => {
-                let tampilanAwal = 'antrian'; 
-                if (snapshot.exists()) {
-                    tampilanAwal = snapshot.val();
-                } else {
-                    refConfig.set(tampilanAwal); 
+                const config = snapshot.val();
+                if (!config) return; 
+                
+                // 1. Update Marquee (Universal)
+                if (config.marquee && config.marquee.teks) {
+                    const newText = config.marquee.teks;
+                    elMarquee1Antrian.innerText = newText;
+                    elMarquee2Antrian.innerText = newText;
+                    elMarquee1Iklan.innerText = newText;
+                    elMarquee2Iklan.innerText = newText;
                 }
-                gantiTampilan(tampilanAwal);
+                
+                // 2. Update Media Player (Universal)
+                if (config.media) {
+                    const media = config.media;
+                    const audioLevel = media.audio || 0; 
+                    
+                    // Matikan player lama
+                    stopAllPlayers();
+                    
+                    // Nyalakan player di tampilan yang benar
+                    if (config.tampilan_aktif === 'antrian') {
+                        elHlsPlayerIklan.classList.add('hidden');
+                        document.getElementById(elYoutubePlayerIklan).classList.add('hidden');
+                        if (media.tipe === 'youtube') {
+                            loadYouTubePlayer(media.sumber, audioLevel, elYoutubePlayerAntrian);
+                            document.getElementById(elYoutubePlayerAntrian).classList.remove('hidden');
+                            elHlsPlayerAntrian.classList.add('hidden');
+                        } else if (media.tipe === 'm3u8') {
+                            loadHlsPlayer(media.sumber, audioLevel, elHlsPlayerAntrian);
+                            elHlsPlayerAntrian.classList.remove('hidden');
+                            document.getElementById(elYoutubePlayerAntrian).classList.add('hidden');
+                        }
+                    } else if (config.tampilan_aktif === 'iklan') {
+                        elHlsPlayerAntrian.classList.add('hidden');
+                        document.getElementById(elYoutubePlayerAntrian).classList.add('hidden');
+                        if (media.tipe === 'youtube') {
+                            loadYouTubePlayer(media.sumber, audioLevel, elYoutubePlayerIklan);
+                            document.getElementById(elYoutubePlayerIklan).classList.remove('hidden');
+                            elHlsPlayerIklan.classList.add('hidden');
+                        } else if (media.tipe === 'm3u8') {
+                            loadHlsPlayer(media.sumber, audioLevel, elHlsPlayerIklan);
+                            elHlsPlayerIklan.classList.remove('hidden');
+                            document.getElementById(elYoutubePlayerIklan).classList.add('hidden');
+                        }
+                    }
+                }
+                
+                // 3. Update Iklan Slideshow (Hanya di Tampilan Iklan)
+                if (config.iklan_kiri && config.iklan_kiri.length > 0) setupCarousel('kiri', config.iklan_kiri);
+                else destroyCarousel('kiri');
+                if (config.iklan_kanan && config.iklan_kanan.length > 0) setupCarousel('kanan', config.iklan_kanan);
+                else destroyCarousel('kanan');
+
+                // 4. (PALING PENTING) Ganti Tampilan
+                if (config.tampilan_aktif === 'antrian') {
+                    elViewAntrian.classList.remove('hidden');
+                    elViewIklan.classList.add('hidden');
+                } else if (config.tampilan_aktif === 'iklan') {
+                    elViewAntrian.classList.add('hidden');
+                    elViewIklan.classList.remove('hidden');
+                } else {
+                    elViewAntrian.classList.remove('hidden'); // Default
+                    elViewIklan.classList.add('hidden');
+                }
             });
         }
         
-        // --- 6. LOGIKA Tombol Start ---
-        elStartButton.onclick = function() {
-            elStartOverlay.style.display = 'none';
-            elViewFrame.src = "about:blank"; // Muat dummy page
-            loadInitialView();
+        // --- Bagian 7: Logika Carousel Swiper.js ---
+        function setupCarousel(sisi, urls) {
+            let swiper = (sisi === 'kiri') ? swiperKiri : swiperKanan;
+            let wrapper = (sisi === 'kiri') ? elSwiperWrapperKiri : elSwiperWrapperKanan;
+            let swiperId = (sisi === 'kiri') ? '#swiper-kiri' : '#swiper-kanan';
+            if (swiper) swiper.destroy(true, true);
+            wrapper.innerHTML = '';
+            urls.forEach(url => {
+                wrapper.innerHTML += `<div class="swiper-slide" style="background-image: url(${url})"></div>`;
+            });
+            swiper = new Swiper(swiperId, {
+                direction: 'vertical', loop: true,
+                autoplay: { delay: 5000, disableOnInteraction: false },
+                effect: 'slide',
+            });
+            if (sisi === 'kiri') swiperKiri = swiper;
+            else swiperKanan = swiper;
+        }
+        function destroyCarousel(sisi) {
+            let swiper = (sisi === 'kiri') ? swiperKiri : swiperKanan;
+            let wrapper = (sisi === 'kiri') ? elSwiperWrapperKiri : elSwiperWrapperKanan;
+            if (swiper) swiper.destroy(true, true);
+            wrapper.innerHTML = '';
+        }
+
+        // --- Bagian 8: TOMBOL START (SATU-SATUNYA) ---
+        const startButton = document.getElementById('start-button');
+        const startOverlay = document.getElementById('start-overlay');
+
+        startButton.onclick = function() {
+            startOverlay.style.display = 'none';
+            
+            // (PENTING) Coba putar dan jeda audio agar "izin" aktif
+            elBellSound.play();
+            elBellSound.pause();
+            
+            // Mulai SEMUA fungsi
+            setInterval(updateClock, 1000); 
+            updateClock(); 
+            fetchWeather(); 
+            setInterval(fetchWeather, 1800000); 
+            setupAntrianListener();
             setupConfigListener();
         }
     </script>
