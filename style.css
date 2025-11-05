@@ -1,5 +1,5 @@
 /* ========================================
-   FILE STYLE.CSS (BARU - MASTER STYLESHEET)
+   FILE STYLE.CSS (FINAL & LENGKAP)
    ======================================== */
 
 /* --- 1. PENGATURAN GLOBAL --- */
@@ -56,7 +56,8 @@ body, html {
 /* --- 4. LAYOUT KHUSUS: TAMPILAN IKLAN (3-KOLOM) --- */
 #view-iklan {
     grid-template-columns: 250px 1fr 250px;
-    grid-template-rows: auto 1fr auto;
+    /* Ubah baris ini: */
+    grid-template-rows: 150px 1fr auto; /* Baris atas (jam/cuaca) lebih pendek */
     grid-template-areas:
         "jam     video   cuaca"
         "iklan-kiri video iklan-kanan"
@@ -95,11 +96,25 @@ body, html {
     display: flex; align-items: center; justify-content: space-around;
     font-size: 2.2vw; font-weight: bold;
 }
-#view-antrian #jam-digital { font-size: 3.5vw; }
+#view-antrian #jam-digital-antrian { font-size: 3.5vw; }
 
-#view-iklan .jam { text-align: center; font-weight: bold; }
-#view-iklan #jam-digital { font-size: 3.5vw; }
-#view-iklan #antrian-mini { font-size: 3vw; margin-top: 15px; color: #f0f0f0; text-shadow: 1px 1px 3px #000; }
+/* Penyesuaian untuk Jam di Tampilan Iklan */
+#view-iklan .jam { 
+    text-align: center; 
+    font-weight: bold; 
+    display: flex; /* Tambah ini */
+    flex-direction: column; /* Tambah ini */
+    justify-content: center; /* Tambah ini */
+    align-items: center; /* Tambah ini */
+    padding: 10px; /* Kurangi padding agar tidak terlalu sesak */
+}
+#view-iklan #jam-digital-iklan { font-size: 2.8vw; } /* Sedikit dikecilkan */
+#view-iklan #antrian-mini { 
+    font-size: 2.5vw; /* Sedikit dikecilkan */
+    margin-top: 10px; 
+    color: #f0f0f0; 
+    text-shadow: 1px 1px 3px #000; 
+}
 
 /* Cuaca (Ada di kedua tampilan, style beda) */
 #view-antrian .cuaca {
@@ -107,13 +122,15 @@ body, html {
     font-size: 2.2vw;
 }
 #view-antrian .cuaca-lokasi { display: flex; flex-direction: column; line-height: 1.3; }
-#view-antrian #cuaca-deskripsi { font-size: 1.5vw; font-weight: normal; text-transform: capitalize; }
+#view-antrian #cuaca-deskripsi-antrian { font-size: 1.5vw; font-weight: normal; text-transform: capitalize; }
 #view-antrian .cuaca-suhu-grup { font-size: 3.5vw; font-weight: bold; }
 #view-antrian .cuaca-ikon img { width: 5vw; }
 
+/* Penyesuaian untuk Cuaca di Tampilan Iklan */
 #view-iklan .cuaca {
     display: flex; flex-direction: column; align-items: center;
     justify-content: center; gap: 10px;
+    padding: 10px; /* Kurangi padding agar tidak terlalu sesak */
 }
 #view-iklan .cuaca-suhu-grup { font-size: 3.5vw; font-weight: bold; }
 #view-iklan .cuaca-ikon img { width: 5vw; }
@@ -136,12 +153,20 @@ body, html {
     padding: 0;
     overflow: hidden;
     position: relative; 
+    /* Tambahkan ini untuk memastikan video mengisi ruang sepenuhnya tanpa terpotong */
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 #youtube-player,
-#hls-player {
+#hls-player,
+#youtube-player-iklan,
+#hls-player-iklan {
     position: absolute; top: 0; left: 0; z-index: 1;
     width: 100%; height: 100%;
     border: none; background-color: #000;
+    /* Tambahkan object-fit: contain; agar video tidak terpotong */
+    object-fit: contain; 
 }
 #media-shield {
     position: absolute; top: 0; left: 0;
@@ -189,19 +214,4 @@ body, html {
 #start-button:hover {
     background-color: #ffffff;
     transform: scale(1.05);
-}
-
-/* ========================================
-   !! PERBAIKAN BUG LAYOUT PLAYER !!
-   ======================================== */
-
-/* Ganti blok lama Anda dengan yang ini */
-
-#youtube-player,
-#hls-player,
-#youtube-player-iklan,
-#hls-player-iklan {
-    position: absolute; top: 0; left: 0; z-index: 1;
-    width: 100%; height: 100%;
-    border: none; background-color: #000;
 }
