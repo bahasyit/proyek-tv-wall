@@ -2,8 +2,8 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale-1.0">
-    <title>Display Iklan</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Display Iklan (v2 - Slideshow)</title>
     <link rel="stylesheet" href="style_iklan.css">
 </head>
 <body>
@@ -28,8 +28,7 @@
             </div>
         </div>
 
-        <div class="grid-item iklan-kiri">
-            ADS PHOTO (KIRI KANAN SAMA...)
+        <div class="grid-item iklan-kiri" id="iklan-kiri">
             </div>
 
         <div class="grid-item video">
@@ -37,11 +36,9 @@
             <video id="hls-player" class="hidden" autoplay muted loop playsinline></video>
             <div id="media-shield"></div>
         </div>
-
-        <div class="grid-item iklan-kanan">
-            ADS PHOTO (KIRI KANAN SAMA...)
-        </div>
-
+        
+        <div class="grid-item iklan-kanan" id="iklan-kanan">
+            </div>
         <div class="grid-item footer">
             <div class="marquee-wrapper">
                 <span id="marquee-content-1">...</span>
@@ -49,7 +46,7 @@
             </div>
         </div>
     </div>
-
+    
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
@@ -62,10 +59,7 @@
           authDomain: "project-tv-wall.firebaseapp.com",
           databaseURL: "https://project-tv-wall-default-rtdb.asia-southeast1.firebasedatabase.app",
           projectId: "project-tv-wall",
-          storageBucket: "project-tv-wall.firebasestorage.app",
-          messagingSenderId: "562728437251",
-          appId: "1:562728437251:web:85e9f229b6e4d02b4f7036",
-          measurementId: "G-EX7QEDQBDT"
+          // ... (Sisanya) ...
         };
         
         firebase.initializeApp(firebaseConfig);
@@ -80,12 +74,16 @@
         const elAntrianMini = document.getElementById('antrian-mini');
         const elJamDigital = document.getElementById('jam-digital');
         const elCuacaSuhu = document.getElementById('cuaca-suhu');
-        const elCuacaDeskripsi = document.getElementById('cuaca-deskripsi'); // (Tidak ada di HTML, tapi kita biarkan)
         const elCuacaIkon = document.getElementById('cuaca-ikon-img');
         const elYoutubePlayerDiv = document.getElementById('youtube-player');
         const elHlsPlayer = document.getElementById('hls-player');
         const elMarqueeContent1 = document.getElementById('marquee-content-1');
         const elMarqueeContent2 = document.getElementById('marquee-content-2');
+        
+        // (BARU) Elemen Slideshow Iklan
+        const elIklanKiri = document.getElementById('iklan-kiri');
+        const elIklanKanan = document.getElementById('iklan-kanan');
+        let slideInterval = null; // Variabel untuk menyimpan interval slideshow
         
         // (Kunci API Cuaca)
         const apiKey = "f8adb77a7650f3cc5547cb447fab0b86";
@@ -99,7 +97,6 @@
             const seconds = String(now.getSeconds()).padStart(2, '0');
             elJamDigital.innerText = `${hours}:${minutes}:${seconds}`;
         }
-
         function fetchWeather() {
             const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${kota}&appid=${apiKey}&units=metric&lang=id`;
             fetch(apiUrl).then(res => res.json()).then(data => {
@@ -116,13 +113,12 @@
                 const data = snapshot.val();
                 if (!data) return; 
                 let nomorTigaDigit = String(data.nomor).padStart(3, '0');
-                // (Tampilan ini TIDAK punya Bell, hanya update teks)
                 elAntrianMini.innerText = `${data.kode} ${nomorTigaDigit}`;
             });
         }
 
-        // --- Bagian 4: FUNGSI PLAYER (LENGKAP - dengan Slider Volume) ---
-        // (Sama persis seperti di view_antrian.html)
+        // --- Bagian 4: FUNGSI PLAYER (LENGKAP & BENAR) ---
+        // (Ini akan memperbaiki masalah video hitam Anda)
         window.onYouTubeIframeAPIReady = function() { }
         function loadYouTubePlayer(sumber, audioLevel) {
             elYoutubePlayerDiv.classList.remove('hidden');
@@ -152,18 +148,25 @@
                 hlsInstance.loadSource(sumber);
                 hlsInstance.attachMedia(elHlsPlayer);
                 hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => { elHlsPlayer.play(); });
+            } else if (elHlsPlayer.canPlayType('application/vnd.apple.mpegurl')) {
+                elHlsPlayer.src = sumber;
+                elHlsPlayer.play();
             }
         }
 
-        // --- Bagian 5: FUNGSI CMS (LENGKAP) ---
+        // --- Bagian 5: FUNGSI CMS (Di-upgrade untuk Slideshow) ---
         function setupConfigListener() {
             refConfig.on('value', (snapshot) => {
                 const config = snapshot.val();
                 if (!config) return; 
+                
+                // 1. Update Marquee
                 if (config.marquee && config.marquee.teks) {
                     elMarqueeContent1.innerText = config.marquee.teks;
                     elMarqueeContent2.innerText = config.marquee.teks;
                 }
+                
+                // 2. Update Media Player
                 if (config.media) {
                     const media = config.media;
                     const audioLevel = media.audio || 0; 
@@ -173,11 +176,55 @@
                         loadHlsPlayer(media.sumber, audioLevel);
                     }
                 }
-                // (Nanti kita tambahkan listener untuk Iklan Kiri/Kanan di sini)
+                
+                // 3. (BARU) Update Iklan Slideshow
+                if (config.iklan_slideshow && config.iklan_slideshow.length > 0) {
+                    // Ada iklan, mulai slideshow
+                    startSlideshow(config.iklan_slideshow);
+                } else {
+                    // Tidak ada iklan, hentikan slideshow
+                    stopSlideshow();
+                }
             });
         }
+        
+        // --- (BARU) Bagian 6: Logika Slideshow Iklan ---
+        function startSlideshow(daftarUrl) {
+            stopSlideshow(); // Hentikan slideshow lama (jika ada)
+            
+            let slideIndex = 0;
+            
+            // Fungsi untuk ganti gambar
+            function gantiSlide() {
+                if (daftarUrl.length === 0) return; // Berhenti jika daftar dikosongkan
+                
+                // Ambil URL berikutnya (looping)
+                const urlGambar = daftarUrl[slideIndex % daftarUrl.length];
+                
+                // Set gambar sebagai background
+                elIklanKiri.style.backgroundImage = `url(${urlGambar})`;
+                elIklanKanan.style.backgroundImage = `url(${urlGambar})`;
+                
+                slideIndex++; // Pindah ke slide berikutnya
+            }
+            
+            gantiSlide(); // Ganti slide pertama kali
+            
+            // Atur interval untuk ganti slide setiap 15 detik (15000 ms)
+            slideInterval = setInterval(gantiSlide, 15000); 
+        }
 
-        // --- Bagian 6: TOMBOL START (LENGKAP) ---
+        function stopSlideshow() {
+            if (slideInterval) {
+                clearInterval(slideInterval);
+                slideInterval = null;
+            }
+            // Hapus gambar
+            elIklanKiri.style.backgroundImage = 'none';
+            elIklanKanan.style.backgroundImage = 'none';
+        }
+
+        // --- Bagian 7: TOMBOL START (LENGKAP) ---
         const startButton = document.getElementById('start-button');
         const startOverlay = document.getElementById('start-overlay');
         startButton.onclick = function() {
